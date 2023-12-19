@@ -1,0 +1,94 @@
+namespace: FastGPT
+
+mongo:
+  defines: runnable
+  inherits: mongodb/mongodb
+  metadata:
+    name: mongo
+    description: MongoDB database for the FastGPT application.
+    icon: >-
+      https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA8VbFgxH-i78AZmNqD93mVRkTRd30POqLeCmg9T05ug&s
+  variables:
+    mongo-image:
+      type: string
+      value: latest
+      description: ''
+    mongo-init-database:
+      type: string
+      value: mongo
+      description: ''
+    mongo-init-password:
+      type: string
+      value: password
+      description: ''
+    mongo-init-username:
+      type: string
+      value: mongo
+      description: ''
+    mongodb-image:
+      type: string
+      value: latest
+      description: ''
+
+pg:
+  defines: runnable
+  metadata:
+    name: pg
+    description: PostgreSQL database with vector support for the FastGPT application.
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    pg:
+      image: ankane/pgvector:v0.5.0
+      build: .
+  services:
+    postgres-default:
+      description: Default PostgreSQL port for database connections.
+      container: pg
+      port: 5432
+      host-port: 5432
+      publish: true
+      protocol: tcp
+  connections:
+    database-connection:
+      target: FastGPT/fastgpt
+      service: postgres-default
+      optional: true
+      description: Connection from the PostgreSQL database to the FastGPT application.
+  variables:
+    postgres-user:
+      env: POSTGRES_USER
+      type: string
+      value: username
+      description: Username for the PostgreSQL database.
+    postgres-password:
+      env: POSTGRES_PASSWORD
+      type: string
+      value: password
+      description: Password for the PostgreSQL database.
+    postgres-db:
+      env: POSTGRES_DB
+      type: string
+      value: postgres
+      description: Database name for the PostgreSQL database.
+
+worker:
+  defines: runnable
+  metadata:
+    name: worker
+    description: Worker service for the FastGPT application.
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    worker:
+      image: env-4383.registry.local/worker:main-41115a9
+      build: .
+      dockerfile: Dockerfile.worker
+  services: {}
+  connections: {}
+  variables: {}
+
+stack:
+  defines: group
+  members:
+    - FastGPT/mongo
+    - FastGPT/pg
+    - FastGPT/worker
